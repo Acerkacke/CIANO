@@ -2,9 +2,10 @@
 using System.Collections;
 
 public class EnemyGenerator : MonoBehaviour, IDamageable {
-	public GameObject enemy;
+	public GameObject enemyPrefab;
 	private float t;
 	public int health = 150;
+	public float spawnTime = 4f;
 
 	void Start () {
 		t = 0f;
@@ -13,16 +14,16 @@ public class EnemyGenerator : MonoBehaviour, IDamageable {
 	
 	void Update () {
 		t += Time.deltaTime;
-		if (t > 4) {
+		if (t >= spawnTime) {
 			t = 0f;
-			Instantiate(enemy, transform.position + transform.forward * 2, Quaternion.identity);
+			Instantiate(enemyPrefab, transform.position + transform.forward * 2, Quaternion.identity);
 		}
 	}
 
 	public void Damage(int i){
 		health -= i;
-		if (health < 1) {
-			Player.addScore(56);
+		if (health <= 0) {
+			Player.Instance.addScore(Random.Range(45,55));
 			Destroy(this.gameObject);
 		}
 	}

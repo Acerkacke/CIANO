@@ -2,21 +2,35 @@
 using System.Collections;
 
 public class Enemy : MonoBehaviour, IDamageable {
-	int health = 40;
+	private int health;
+	public int Health{
+		get{
+			return health;
+		}
+		protected set{
+			health = value;
+		}
+	}
+	public float minDistance = 3.5f;
+	public int initialHealth = 40;
 	public float speed = 5;
-	private GameObject player;
-	private bool isMoving = true;
+	public int damage = 10;
+	private GameObject playerGo;
+	private Player player;
+	private bool canMove = true;
 
 	void Start () {
-		player = GameObject.Find ("Player");
+		health = initialHealth;
+		playerGo = GameObject.FindGameObjectWithTag("Player");
+		player = Player.Instance;
 	}
 	
 	void Update () {
-		if (isMoving) {
-			if (Vector3.Distance (this.gameObject.transform.position, player.transform.position) > 5)
-				transform.Translate (-(transform.position - player.transform.position).normalized * Time.deltaTime * speed);
+		if (canMove) {
+			if (Vector3.Distance (gameObject.transform.position, playerGo.transform.position) > minDistance)
+				transform.Translate ((playerGo.transform.position - transform.position).normalized * Time.deltaTime * speed);
 			else {
-				player.GetComponent<IDamageable> ().Damage (Random.Range (5, 13));
+				player.Damage (Random.Range (damage-5, damage+5));
 				StartCoroutine(wait(1));
 			}
 		}
@@ -25,15 +39,13 @@ public class Enemy : MonoBehaviour, IDamageable {
 	public void Damage(int i){
 		health -= i;
 		if (health <= 0) {
-			//transform.position = new Vector3(0, 1, 0);
-			//health = 40;
-			Player.addScore (5);
+			player.addScore (5);
 			Destroy(this.gameObject);
 		}
 	}
 	private IEnumerator wait(float t){
-		isMoving = false;
+		canMove = false;
 		yield return new WaitForSeconds (t);
-		isMoving = true;
+		canMove = true;
 	}
 }

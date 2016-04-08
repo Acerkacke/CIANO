@@ -2,74 +2,115 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class Player : MonoBehaviour, IDamageable {
-	private static int score = 0;
-	public float speed = 10.0F;
-	public float jumpSpeed = 8.0F;
-	public float gravity = 20.0F;
+public class Player : MonoBehaviour, IDamageable,ISlowUpdate{
+	
+	private int score = 0;
+	public int Score{
+		get{
+			return score;
+		}
+		protected set{
+			score = value;
+			OnScoreChanged();
+		}
+	}
+	public float speed = 10f;
+	public float jumpSpeed = 8f;
+	public float mouseSensibility = 1.5f;
+
+	public static Player Instance;
+
 	private Vector3 moveDirection = Vector3.zero;
-	private CharacterController controller;
+	private CharacterController characterController;
 	private GameObject cam;
 	private Weapon weapon;
 	private float health = 50;
-	private Text vita;
-	private static Text scoreT;
+	public float Health{
+		get{
+			return health;
+		}
+		protected set{
+			health = value;
+			OnHealthChanged();
+		}
+	}
+
+	public Text healthText;
+	public Text scoreText;
 
 	void Start(){
-		controller = GetComponent<CharacterController>();
+		characterController = GetComponent<CharacterController>();
 		cam = gameObject.GetComponentInChildren<Camera> ().gameObject;
 		Cursor.visible = false;
 		weapon = gameObject.GetComponentInChildren<Weapon> ();
-		Text[] testi = gameObject.GetComponentsInChildren<Text> ();
-		foreach(Text t in testi){
-			if(t.gameObject.name == "Vita")
-				vita = t;
-			if(t.gameObject.name == "Score")
-				scoreT = t;
+
+
+		if(Instance == null){
+			Instance = this;
+		}else{
+			Debug.LogError("Player - TWO INSTANCES FOUND, FIX THIS");
 		}
 	}
 
 	void Update() {
+		
+		Shoot();
+		Move();
+		View ();
+	}
+
+	void Shoot(){
 		if (Input.GetMouseButton (0)) {
 			if(!weapon.IsReloading){
-				weapon.ShootOne();
+				weapon.Shoot(1);
 			}
 		}
 		if (Input.GetMouseButton (1)) {
 			if(!weapon.IsReloading){
-				weapon.ShootTwo();
+				weapon.Shoot(2);
 			}
 		}
+	}
 
-		if (controller.isGrounded) {
+	void Move(){
+		if (characterController.isGrounded) {
 			moveDirection.Set(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 			moveDirection = transform.TransformDirection(moveDirection);
 			moveDirection *= speed;
 			if (Input.GetButton("Jump"))
 				moveDirection.y = jumpSpeed;
-			
+
 		}
-
-		moveDirection.y -= gravity * Time.deltaTime;
-		controller.Move(moveDirection * Time.deltaTime);
-
-		View ();
+		moveDirection.y -= 9.81f * Time.deltaTime;
+		characterController.Move(moveDirection * Time.deltaTime);
 	}
 
 	void View(){
-		cam.transform.Rotate (new Vector3(-Input.GetAxis("Mouse Y") * 1.5f, 0, 0));
-		transform.Rotate (new Vector3(0, Input.GetAxis("Mouse X") * 1.5f, 0));
+		cam.transform.Rotate (new Vector3(-Input.GetAxis("Mouse Y") * mouseSensibility, 0, 0));
+		transform.Rotate (new Vector3(0, Input.GetAxis("Mouse X") * mouseSensibility, 0));
 	}
 
 	public void Damage(int i){
-		health -= i;
-		vita.text = "Health: " + health.ToString ();
-		if (health < 1)
+		Health -= i;
+		if (Health <= 0){
+			Health = 0;
 			Destroy (this);
+		}
 	}
 
-	public static void addScore(int s){
-		score += s;
-		scoreT.text = "Score: " + score.ToString ();
+	void OnHealthChanged(){
+		healthText.text = "Health: " + health;
+	}
+
+	void OnScoreChanged(){
+		scoreText.text= "Score: " + score;
+	}
+
+	public void addScore(int s){
+		Score += s;
+	}
+
+	public void SlowUpdate(){
+		
 	}
 }
