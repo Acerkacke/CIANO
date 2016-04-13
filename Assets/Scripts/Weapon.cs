@@ -5,6 +5,7 @@ public class Weapon : MonoBehaviour {
 	
 	private LineRenderer lineRend;
 
+	public int maxDistance = 50;
 	public float normalReloadingTime = 0.1f;
 	public float specialReloadingTime = 0.5f;
 	public float lineRendTimeToDie = 0.05f;
@@ -64,7 +65,7 @@ public class Weapon : MonoBehaviour {
 
 			RaycastHit hit;
 			if (Physics.Raycast (transform.position, transform.forward, out hit)) {
-				if(hit.distance < 70){
+				if(hit.distance < maxDistance){
 					if(hit.transform.GetComponent<IDamageable>() != null){
 						IDamageable damageableObj = hit.transform.GetComponent<IDamageable>();
 						damageableObj.Damage(randDmg);

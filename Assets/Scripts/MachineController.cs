@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MachineController : MonoBehaviour,IDamageable{
 
@@ -26,6 +28,9 @@ public class MachineController : MonoBehaviour,IDamageable{
 		}
 		protected set{
 			state = value;
+			if(OnMachineStateChanged != null){
+				OnMachineStateChanged(state);
+			}
 			OnStateChanged(value);
 		}
 	}
@@ -53,6 +58,9 @@ public class MachineController : MonoBehaviour,IDamageable{
 	//LINERENDER
 	private LineRenderer shootLine;
 	private float disableLineTime;
+
+	//EVENTS
+	private Action<MachineState> OnMachineStateChanged;
 
 	void Start () {
 
@@ -88,7 +96,7 @@ public class MachineController : MonoBehaviour,IDamageable{
 
 	void Update () {
 
-		switch (state) {
+		switch (State) {
 		case MachineState.Patrolling:
 			Patrol();
 			break;
@@ -107,7 +115,7 @@ public class MachineController : MonoBehaviour,IDamageable{
 	}
 
 	void LessFrequentUpdate(){
-		switch (state) {
+		switch (State) {
 		case MachineState.Resting:
 			CheckPlayerDistance(maxDistanceRest);
 			break;
@@ -135,8 +143,8 @@ public class MachineController : MonoBehaviour,IDamageable{
 					//Debug.Log("Player distance " + hit.distance + " state: " + state);
 					if(hit.distance <= maxDist){
 						//HIT! HE'S NEAR
-						if(state != MachineState.Attack){
-							Debug.Log("Player near, upgrade state");
+						if(State != MachineState.Attack){
+							//Debug.Log("Player near, upgrade state");
 							isPlayerNear = true;
 							UpgradeState();
 						}
@@ -157,9 +165,9 @@ public class MachineController : MonoBehaviour,IDamageable{
 		if(isPlayerNear){
 			//Debug.Log("Time.time : " + Time.time + " Losing after : " + (timeLastSeen+losingAlertAfter));
 			if(Time.time > timeLastSeen+losingAlertAfter){
-				Debug.Log("Player too far, degrade state");
+				//Debug.Log("Player too far, degrade state");
 				timeLastSeen = Time.time;
-				if(state == MachineState.Alert){
+				if(State == MachineState.Alert){
 					goCheckLastSeen();
 					isPlayerNear = false;
 				}
@@ -189,7 +197,7 @@ public class MachineController : MonoBehaviour,IDamageable{
 			RaycastHit hit;
 			if (Physics.Raycast (testa.transform.position, testa.transform.forward, out hit, maxDistanceAttack)) {
 				if (hit.transform.GetComponent<IDamageable> () != null) {
-					hit.transform.GetComponent<IDamageable> ().Damage (Random.Range (damage - 2, damage + 3));
+					hit.transform.GetComponent<IDamageable> ().Damage (UnityEngine.Random.Range (damage - 2, damage + 3));
 
 				} else {
 					//HIT A WALL OR SOMETHING
@@ -225,15 +233,15 @@ public class MachineController : MonoBehaviour,IDamageable{
 
 	void PatrolMove(){
 		if (NMA.remainingDistance != Mathf.Infinity &&  NMA.pathStatus == NavMeshPathStatus.PathComplete && NMA.remainingDistance == 0) {
-			float randX = Random.Range (transform.position.x - 10, transform.position.x + 10);
-			float randZ = Random.Range (transform.position.z - 10, transform.position.z + 10);
+			float randX = UnityEngine.Random.Range (transform.position.x - 10, transform.position.x + 10);
+			float randZ = UnityEngine.Random.Range (transform.position.z - 10, transform.position.z + 10);
 			NMA.SetDestination (new Vector3 (randX, 0, randZ));
 			nextMove = Time.time + restingTime;
 		}
 	}
 
 	void UpgradeState(){
-		switch (state) {
+		switch (State) {
 		case MachineState.Resting:
 			State = MachineState.Patrolling;
 			break;
@@ -245,11 +253,11 @@ public class MachineController : MonoBehaviour,IDamageable{
 			State = MachineState.Attack;
 			break;
 		}
-		Debug.Log ("Upgraded State: " + state);
+		//Debug.Log ("Upgraded State: " + state);
 	}
 
 	void DegradeState(){
-		switch (state) {
+		switch (State) {
 		case MachineState.Alert:
 			state = MachineState.Patrolling;
 			break;
@@ -257,7 +265,7 @@ public class MachineController : MonoBehaviour,IDamageable{
 			state = MachineState.Alert;
 			break;
 		}
-		Debug.Log ("Degraded State: " + state);
+		//Debug.Log ("Degraded State: " + state);
 	}
 
 	void OnStateChanged(MachineState state){
@@ -269,5 +277,12 @@ public class MachineController : MonoBehaviour,IDamageable{
 		if (currHealth <= 0) {
 			Destroy(gameObject);
 		}
+	}
+
+	public void AddOnStateChanged(Action<MachineState> action){
+		OnMachineStateChanged += action;
+	}
+	public void RemoveOnStateChanged(Action<MachineState> action){
+		OnMachineStateChanged -= action;
 	}
 }

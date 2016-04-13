@@ -11,8 +11,8 @@ public class MenuButtonManager : MonoBehaviour {
 	
 	}
 
-	public void LoadLevel(){
-		
+	public void LoadLevel(string levelName){
+		Application.LoadLevel(levelName);
 	}
 
 	public void Exit(){
