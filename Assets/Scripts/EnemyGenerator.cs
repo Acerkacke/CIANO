@@ -5,7 +5,7 @@ public class EnemyGenerator : MonoBehaviour, IDamageable {
 	public GameObject enemyPrefab;
 	private float t;
 	public int health = 150;
-	public float spawnTime = 4f;
+	public float spawnTime = 8f;
 
 	void Start () {
 		t = 0f;

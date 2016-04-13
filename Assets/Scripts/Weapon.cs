@@ -7,12 +7,16 @@ public class Weapon : MonoBehaviour {
 
 	public float normalReloadingTime = 0.1f;
 	public float specialReloadingTime = 0.5f;
+	public float lineRendTimeToDie = 0.05f;
+	private float nextLineRendDie;
 	private float nextReloadTime;
 
 	private bool isReloading = false;
 	public bool IsReloading{
 		get { return isReloading; }
 	}
+
+	public Transform SparatoreTR;
 
 	void Start(){
 		if(GetComponent<LineRenderer>()){
@@ -21,17 +25,18 @@ public class Weapon : MonoBehaviour {
 		}else{
 			Debug.LogError("Weapon - MISSING LINE RENDERER");
 		}
+
 	}
 
 	void Update(){
-		//SE STA RICARICANDO
+		//IF IT'S RELOADING
 		if (isReloading) {
 			//IF IT'S PASSED ENOUGH TIME
 			if(Time.time > nextReloadTime){
 				isReloading = false; //WE'RE NOT RELOADING ANYMORE
 			}
 			//IF THE LINE RENDERER IS ACTIVE AND ENOUGH TIME PASSED
-			if(lineRend.enabled && Time.time > nextReloadTime-0.07f)
+			if(lineRend.enabled && Time.time > nextLineRendDie)
 				lineRend.enabled = false;
 		}
 	}
@@ -58,12 +63,22 @@ public class Weapon : MonoBehaviour {
 			}
 
 			RaycastHit hit;
-			if (Physics.Raycast (transform.position, transform.forward, out hit, 100)) {
-				if(hit.transform.GetComponent<IDamageable>() != null){
-					IDamageable damageableObj = hit.transform.GetComponent<IDamageable>();
-					damageableObj.Damage(randDmg);
+			if (Physics.Raycast (transform.position, transform.forward, out hit)) {
+				if(hit.distance < 70){
+					if(hit.transform.GetComponent<IDamageable>() != null){
+						IDamageable damageableObj = hit.transform.GetComponent<IDamageable>();
+						damageableObj.Damage(randDmg);
+					}
+					lineRend.SetPosition(1,hit.point);
+				}else{
+					lineRend.SetPosition(1, (transform.position + transform.forward * 50));
 				}
+			}else{
+				lineRend.SetPosition(1, (transform.position + transform.forward * 50));
 			}
+			lineRend.SetPosition(0,SparatoreTR.position);
+
+			nextLineRendDie = Time.time + lineRendTimeToDie;
 			lineRend.enabled = true;
 			isReloading = true;
 		}
