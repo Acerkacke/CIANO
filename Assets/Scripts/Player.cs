@@ -72,6 +72,7 @@ public class Player : MonoBehaviour, IDamageable,ISlowUpdate,ISecondUpdate{
 		Shoot();
 		Move();
 		View ();
+		Pause();
 	}
 
 	void Shoot(){
@@ -112,6 +113,12 @@ public class Player : MonoBehaviour, IDamageable,ISlowUpdate,ISecondUpdate{
 	void View(){
 		cam.transform.Rotate (new Vector3(-Input.GetAxis("Mouse Y") * mouseSensibility, 0, 0));
 		transform.Rotate (new Vector3(0, Input.GetAxis("Mouse X") * mouseSensibility, 0));
+	}
+
+	void Pause(){
+		if(Input.GetKeyDown(KeyCode.Escape)){
+			
+		}
 	}
 
 	public void Damage(int i){

@@ -9,6 +9,7 @@ public class Weapon : MonoBehaviour {
 	public float normalReloadingTime = 0.1f;
 	public float specialReloadingTime = 0.5f;
 	public float lineRendTimeToDie = 0.05f;
+	public float imprecision = 1f;
 	private float nextLineRendDie;
 	private float nextReloadTime;
 
@@ -81,18 +82,12 @@ public class Weapon : MonoBehaviour {
 			}
 
 			RaycastHit hit;
-			float range = 2f;
-			Vector3 direction;
-			if(!mira){
-				direction = transform.forward + new Vector3(Random.Range(-range,range),Random.Range(-range,range),0);
-			}else{
-				direction = transform.forward;
-			}
-			Debug.Log(direction);
-			if (Physics.Raycast (transform.position,direction, out hit)) {
-				if(hit.transform.GetComponent<IDamageable>() != null){
-					IDamageable damageableObj = hit.transform.GetComponent<IDamageable>();
-					damageableObj.Damage(randDmg);
+			if (Physics.Raycast (transform.position,transform.forward, out hit)) {
+				if(hit.transform != transform.root){
+					if(hit.transform.GetComponent<IDamageable>() != null){
+						IDamageable damageableObj = hit.transform.GetComponent<IDamageable>();
+						damageableObj.Damage(randDmg);
+					}
 				}
 				lineRend.SetPosition(1, new Vector3(0, 0, Vector3.Distance(transform.position, hit.point)));
 			}else{
