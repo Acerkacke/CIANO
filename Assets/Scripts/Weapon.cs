@@ -12,13 +12,20 @@ public class Weapon : MonoBehaviour {
 	private float nextLineRendDie;
 	private float nextReloadTime;
 
+	private Vector3 miraPos = new Vector3 (0, -0.3f, 1);
+	private Vector3 noMiraPos = new Vector3 (0.5f, -0.4f, 1);
+
+	private bool mira = false;
+	public bool Mira{
+		get{ return mira; }
+		set{ mira = value; OnMiraChanged(); }
+	}
+
 	private bool isReloading = false;
 	public bool IsReloading{
 		get { return isReloading; }
 	}
-
-	public Transform SparatoreTR;
-
+	
 	void Start(){
 		if(GetComponent<LineRenderer>()){
 			lineRend = GetComponent<LineRenderer> ();
@@ -40,6 +47,16 @@ public class Weapon : MonoBehaviour {
 			if(lineRend.enabled && Time.time > nextLineRendDie)
 				lineRend.enabled = false;
 		}
+
+
+	}
+
+	private void OnMiraChanged(){
+		if (mira) {
+			transform.localPosition = Vector3.Lerp(transform.localPosition, miraPos, Time.deltaTime * 10);
+		} else {
+			transform.localPosition = Vector3.Lerp(transform.localPosition, noMiraPos, Time.deltaTime * 10);
+		}
 	}
 
 	public void Shoot(int weaponID){
@@ -53,7 +70,7 @@ public class Weapon : MonoBehaviour {
 				lineRend.SetColors (Color.yellow, Color.yellow);
 				break;
 			case 2:
-				randDmg = Random.Range(25, 40);
+				randDmg = Random.Range(100, 150);
 				nextReloadTime = Time.time + specialReloadingTime;
 				lineRend.SetColors (Color.blue, Color.blue);
 				break;
@@ -64,20 +81,23 @@ public class Weapon : MonoBehaviour {
 			}
 
 			RaycastHit hit;
-			if (Physics.Raycast (transform.position, transform.forward, out hit)) {
-				if(hit.distance < maxDistance){
-					if(hit.transform.GetComponent<IDamageable>() != null){
-						IDamageable damageableObj = hit.transform.GetComponent<IDamageable>();
-						damageableObj.Damage(randDmg);
-					}
-					lineRend.SetPosition(1,hit.point);
-				}else{
-					lineRend.SetPosition(1, (transform.position + transform.forward * 50));
-				}
+			float range = 2f;
+			Vector3 direction;
+			if(!mira){
+				direction = transform.forward + new Vector3(Random.Range(-range,range),Random.Range(-range,range),0);
 			}else{
-				lineRend.SetPosition(1, (transform.position + transform.forward * 50));
+				direction = transform.forward;
 			}
-			lineRend.SetPosition(0,SparatoreTR.position);
+			Debug.Log(direction);
+			if (Physics.Raycast (transform.position,direction, out hit)) {
+				if(hit.transform.GetComponent<IDamageable>() != null){
+					IDamageable damageableObj = hit.transform.GetComponent<IDamageable>();
+					damageableObj.Damage(randDmg);
+				}
+				lineRend.SetPosition(1, new Vector3(0, 0, Vector3.Distance(transform.position, hit.point)));
+			}else{
+				lineRend.SetPosition(1, -(transform.position + transform.forward * 50));
+			}
 
 			nextLineRendDie = Time.time + lineRendTimeToDie;
 			lineRend.enabled = true;

@@ -12,6 +12,7 @@ public class SlowUpdateCaller : MonoBehaviour {
 	private List<ISlowUpdate> SlowUpdatecalls = new List<ISlowUpdate>();
 	private List<ISlowerUpdate> SlowerUpdatecalls = new List<ISlowerUpdate>();
 	private List<ISlowestUpdate> SlowestUpdatecalls = new List<ISlowestUpdate>();
+	private List<ISecondUpdate> SecondUpdatecalls = new List<ISecondUpdate>();
 
 	private int nextSlowUpdateFrameCheck;
 	private int nextSlowerUpdateFrameCheck;
@@ -29,6 +30,7 @@ public class SlowUpdateCaller : MonoBehaviour {
 		getSlowUpdateScripts();
 		getSlowerUpdateScripts();
 		getSlowestUpdateScripts();
+		getSecondUpdateScripts ();
 
 		DontDestroyOnLoad(this);
 	}
@@ -60,11 +62,21 @@ public class SlowUpdateCaller : MonoBehaviour {
 		}
 	}
 
+	void getSecondUpdateScripts(){
+		SecondUpdatecalls.Clear();
+		foreach(GameObject go in GameObject.FindObjectsOfType<GameObject>()){
+			if(go.GetComponent<ISecondUpdate>() != null){
+				SecondUpdatecalls.Add(go.GetComponent<ISecondUpdate>());
+			}
+		}
+	}
+
 	void Update () {
 		if(!usesFixedUpdate){
 			callSlowUpdate();
 			callSlowerUpdate();
 			callSlowestUpdate();
+			callSecondUpdate();
 			frames++;
 		}
 	}
@@ -74,6 +86,7 @@ public class SlowUpdateCaller : MonoBehaviour {
 			callSlowUpdate();
 			callSlowerUpdate();
 			callSlowestUpdate();
+			callSecondUpdate();
 			frames++;
 		}
 	}
@@ -105,6 +118,16 @@ public class SlowUpdateCaller : MonoBehaviour {
 				nextSlowestUpdateFrameCheck = frames + everyHowManyFrames * timesSlowerUpdate * timesSlowestUpdate;
 				foreach(ISlowestUpdate call in SlowestUpdatecalls){
 					call.SlowestUpdate();
+				}
+			}
+		}
+	}
+
+	void callSecondUpdate(){
+		if(SecondUpdatecalls.Count > 0){
+			if(Time.time % 1 == 0){
+				foreach(ISecondUpdate call in SecondUpdatecalls){
+					call.SecondUpdate();
 				}
 			}
 		}

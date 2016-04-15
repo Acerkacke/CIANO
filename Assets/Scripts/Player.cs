@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class Player : MonoBehaviour, IDamageable,ISlowUpdate{
+public class Player : MonoBehaviour, IDamageable,ISlowUpdate,ISecondUpdate{
 	
 	private int score = 0;
 	public int Score{
@@ -21,18 +21,29 @@ public class Player : MonoBehaviour, IDamageable,ISlowUpdate{
 
 	public static Player Instance;
 
+	public float startRehealAfter = 4f;
+	private float startRehealAt;
+	public int rehealPerSecond;
+	private bool hasToReheal = false;
+	
 	private Vector3 moveDirection = Vector3.zero;
 	private CharacterController characterController;
 	public GameObject cam;
 	private Weapon weapon;
-	private float health = 50;
-	public float Health{
+	public int startHealth = 50;
+	private int health;
+	public int Health{
 		get{
 			return health;
 		}
 		protected set{
+			int lastHealth = health;
 			health = value;
-			OnHealthChanged();
+			if(value > lastHealth){
+				OnHealthChanged(false);
+			}else{
+				OnHealthChanged(true);
+			}
 		}
 	}
 
@@ -43,6 +54,7 @@ public class Player : MonoBehaviour, IDamageable,ISlowUpdate{
 	public Image damagePanel;
 
 	void Start(){
+		health = startHealth;
 		characterController = GetComponent<CharacterController>();
 		//cam = gameObject.GetComponentInChildren<Camera> ().gameObject;
 		Cursor.visible = false;
@@ -69,9 +81,12 @@ public class Player : MonoBehaviour, IDamageable,ISlowUpdate{
 			}
 		}
 		if (Input.GetMouseButton (1)) {
-			if(!weapon.IsReloading){
+			/*if(!weapon.IsReloading){
 				weapon.Shoot(2);
-			}
+			}*/
+			weapon.Mira = true;
+		} else {
+			weapon.Mira = false;
 		}
 	}
 
@@ -100,16 +115,22 @@ public class Player : MonoBehaviour, IDamageable,ISlowUpdate{
 	}
 
 	public void Damage(int i){
-		Health -= i;
-		if (Health <= 0){
-			Health = 0;
-			Destroy (this);
+		if (i > 0) {
+			Health -= i;
+			hasToReheal = true;
+			startRehealAt = Time.time + startRehealAfter;
+			if (Health <= 0) {
+				Health = 0;
+				Destroy (this);
+			}
 		}
 	}
 
-	void OnHealthChanged(){
+	void OnHealthChanged(bool hasLostHealth){
 		healthText.text = "Health: " + health;
-		damagePanel.color = new Color(1,0,0,0.3f);
+		if (hasLostHealth) {
+			damagePanel.color = new Color (1, 0, 0, 0.3f);
+		}
 	}
 
 	void OnScoreChanged(){
@@ -122,7 +143,23 @@ public class Player : MonoBehaviour, IDamageable,ISlowUpdate{
 
 	public void SlowUpdate(){
 		if (damagePanel.color.a > 0) {
-			damagePanel.color = new Color(1,0,0,damagePanel.color.a-0.01f);
+			damagePanel.color = new Color(1,0,0,damagePanel.color.a-0.02f);
+		}
+	}
+
+	public void SecondUpdate(){
+		Reheal ();
+	}
+
+	void Reheal(){
+		if(hasToReheal){
+			if(Time.time >= startRehealAt){
+				if(health < startHealth){
+					Health+=rehealPerSecond;
+				}else{
+					hasToReheal = false;
+				}
+			}
 		}
 	}
 }
